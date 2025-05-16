@@ -78,7 +78,7 @@ void melody_task(void *pvParameters)
     }
 }
 
-void app_main(void)
+void setupButtons()
 {
     gpio_config_t io_cfig = {
         .pin_bit_mask = (1ULL << START_BTN_PIN) | (1ULL << NEXT_BTN_PIN),
@@ -87,6 +87,10 @@ void app_main(void)
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
         .intr_type = GPIO_INTR_DISABLE};
     gpio_config(&io_cfig);
+}
+
+void setupBuzzer()
+{
 
     ledc_timer_config_t buzzer_ledc_timer_cfig = {
         .duty_resolution = LEDC_TIMER_10_BIT,
@@ -104,6 +108,12 @@ void app_main(void)
         .hpoint = 0,
         .timer_sel = BUZZER_TIMER};
     ledc_channel_config(&buzzer_ledc_channel_cfig);
+}
+
+void app_main(void)
+{
+    setupButtons();
+    setupBuzzer();
 
     xTaskCreate(button_task, "button_task", 2048, NULL, 5, NULL);
     xTaskCreate(melody_task, "melody_task", 2048, NULL, 5, NULL);
