@@ -3,6 +3,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/ledc.h"
+#include "button.h"
 
 #define START_BTN_PIN GPIO_NUM_12
 #define NEXT_BTN_PIN GPIO_NUM_14
@@ -14,31 +15,27 @@
 volatile bool g_is_playing = false;
 volatile int g_melody_index = 0;
 
+button_t play_btn, next_btn;
+
 void button_task(void *pvParameters)
 {
-    int start_prev_state = gpio_get_level(START_BTN_PIN);
-    int next_prev_state = gpio_get_level(START_BTN_PIN);
+    button_init(&play_btn, START_BTN_PIN);
+    button_init(&next_btn, NEXT_BTN_PIN);
 
     while (1)
     {
-        int start_curr_state = gpio_get_level(START_BTN_PIN);
-        int next_curr_state = gpio_get_level(NEXT_BTN_PIN);
-
-        if (start_prev_state == 1 && start_curr_state == 0)
+        if (button_pressed_state(&play_btn) == true)
         {
             g_is_playing = !g_is_playing;
 
             printf(g_is_playing ? "Playing...\n" : "Paused.\n");
         }
 
-        if (next_prev_state == 1 && next_curr_state == 0)
+        if (button_pressed_state(&next_btn) == true)
         {
             g_melody_index = (g_melody_index + 1) % 2;
             printf("Switched to melody #%d\n", g_melody_index + 1);
         }
-
-        start_prev_state = start_curr_state;
-        next_prev_state = next_curr_state;
 
         vTaskDelay(pdMS_TO_TICKS(50));
     }
@@ -78,16 +75,16 @@ void melody_task(void *pvParameters)
     }
 }
 
-void setupButtons()
-{
-    gpio_config_t io_cfig = {
-        .pin_bit_mask = (1ULL << START_BTN_PIN) | (1ULL << NEXT_BTN_PIN),
-        .mode = GPIO_MODE_INPUT,
-        .pull_up_en = GPIO_PULLUP_ENABLE,
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .intr_type = GPIO_INTR_DISABLE};
-    gpio_config(&io_cfig);
-}
+// void setupButtons()
+// {
+//     gpio_config_t io_cfig = {
+//         .pin_bit_mask = (1ULL << START_BTN_PIN) | (1ULL << NEXT_BTN_PIN),
+//         .mode = GPIO_MODE_INPUT,
+//         .pull_up_en = GPIO_PULLUP_ENABLE,
+//         .pull_down_en = GPIO_PULLDOWN_DISABLE,
+//         .intr_type = GPIO_INTR_DISABLE};
+//     gpio_config(&io_cfig);
+// }
 
 void setupBuzzer()
 {
@@ -112,9 +109,9 @@ void setupBuzzer()
 
 void app_main(void)
 {
-    setupButtons();
+    // setupButtons();
     setupBuzzer();
 
-    xTaskCreate(button_task, "button_task", 2048, NULL, 5, NULL);
+    xTaskCreate(button_task, "button_task", 4096, NULL, 5, NULL);
     xTaskCreate(melody_task, "melody_task", 2048, NULL, 5, NULL);
 }
