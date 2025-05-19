@@ -21,9 +21,6 @@ buzzer_t buzzer;
 
 void button_task(void *pvParameters)
 {
-    button_init(&play_btn, START_BTN_PIN);
-    button_init(&next_btn, NEXT_BTN_PIN);
-
     while (1)
     {
         if (button_pressed_state(&play_btn) == true)
@@ -45,12 +42,6 @@ void button_task(void *pvParameters)
 
 void melody_task(void *pvParameters)
 {
-    buzzer_init(
-        &buzzer,
-        BUZZER_TIMER,
-        BUZZER_CHANNEL,
-        BUZZER_PIN);
-
     const int melody1[] = {262, 294, 330, 349}; // C D E F
     const int melody2[] = {392, 440, 494, 523}; // G A B C
 
@@ -80,42 +71,16 @@ void melody_task(void *pvParameters)
     }
 }
 
-// void setupButtons()
-// {
-//     gpio_config_t io_cfig = {
-//         .pin_bit_mask = (1ULL << START_BTN_PIN) | (1ULL << NEXT_BTN_PIN),
-//         .mode = GPIO_MODE_INPUT,
-//         .pull_up_en = GPIO_PULLUP_ENABLE,
-//         .pull_down_en = GPIO_PULLDOWN_DISABLE,
-//         .intr_type = GPIO_INTR_DISABLE};
-//     gpio_config(&io_cfig);
-// }
-
-// void setupBuzzer()
-// {
-
-//     ledc_timer_config_t buzzer_ledc_timer_cfig = {
-//         .duty_resolution = LEDC_TIMER_10_BIT,
-//         .freq_hz = 1000, // Will be updated dynamically
-//         .speed_mode = LEDC_LOW_SPEED_MODE,
-//         .timer_num = BUZZER_TIMER,
-//         .clk_cfg = LEDC_AUTO_CLK};
-//     ledc_timer_config(&buzzer_ledc_timer_cfig);
-
-//     ledc_channel_config_t buzzer_ledc_channel_cfig = {
-//         .channel = BUZZER_CHANNEL,
-//         .duty = 0,
-//         .gpio_num = BUZZER_PIN,
-//         .speed_mode = LEDC_LOW_SPEED_MODE,
-//         .hpoint = 0,
-//         .timer_sel = BUZZER_TIMER};
-//     ledc_channel_config(&buzzer_ledc_channel_cfig);
-// }
-
 void app_main(void)
 {
-    // setupButtons();
-    // setupBuzzer();
+    buzzer_init(
+        &buzzer,
+        BUZZER_TIMER,
+        BUZZER_CHANNEL,
+        BUZZER_PIN);
+
+    button_init(&play_btn, START_BTN_PIN);
+    button_init(&next_btn, NEXT_BTN_PIN);
 
     xTaskCreate(button_task, "button_task", 4096, NULL, 5, NULL);
     xTaskCreate(melody_task, "melody_task", 4096, NULL, 5, NULL);
