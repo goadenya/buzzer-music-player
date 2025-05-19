@@ -4,6 +4,7 @@
 #include "freertos/task.h"
 #include "driver/ledc.h"
 #include "button.h"
+#include "buzzer.h"
 
 #define START_BTN_PIN GPIO_NUM_12
 #define NEXT_BTN_PIN GPIO_NUM_14
@@ -16,6 +17,7 @@ volatile bool g_is_playing = false;
 volatile int g_melody_index = 0;
 
 button_t play_btn, next_btn;
+buzzer_t buzzer;
 
 void button_task(void *pvParameters)
 {
@@ -43,6 +45,12 @@ void button_task(void *pvParameters)
 
 void melody_task(void *pvParameters)
 {
+    buzzer_init(
+        &buzzer,
+        BUZZER_TIMER,
+        BUZZER_CHANNEL,
+        BUZZER_PIN);
+
     const int melody1[] = {262, 294, 330, 349}; // C D E F
     const int melody2[] = {392, 440, 494, 523}; // G A B C
 
@@ -58,16 +66,13 @@ void melody_task(void *pvParameters)
             const int *current_melody = melodies[g_melody_index];
             int note = current_melody[note_index];
 
-            ledc_set_freq(LEDC_LOW_SPEED_MODE, BUZZER_TIMER, note);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, BUZZER_CHANNEL, 512);
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, BUZZER_CHANNEL);
+            play_note(&buzzer, note);
 
             note_index = (note_index + 1) % melody_lengths[g_melody_index];
         }
         else
         {
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, BUZZER_CHANNEL, 0);
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, BUZZER_CHANNEL);
+            stop_buzzer(&buzzer);
             note_index = 0;
         }
 
@@ -86,32 +91,32 @@ void melody_task(void *pvParameters)
 //     gpio_config(&io_cfig);
 // }
 
-void setupBuzzer()
-{
+// void setupBuzzer()
+// {
 
-    ledc_timer_config_t buzzer_ledc_timer_cfig = {
-        .duty_resolution = LEDC_TIMER_10_BIT,
-        .freq_hz = 1000, // Will be updated dynamically
-        .speed_mode = LEDC_LOW_SPEED_MODE,
-        .timer_num = BUZZER_TIMER,
-        .clk_cfg = LEDC_AUTO_CLK};
-    ledc_timer_config(&buzzer_ledc_timer_cfig);
+//     ledc_timer_config_t buzzer_ledc_timer_cfig = {
+//         .duty_resolution = LEDC_TIMER_10_BIT,
+//         .freq_hz = 1000, // Will be updated dynamically
+//         .speed_mode = LEDC_LOW_SPEED_MODE,
+//         .timer_num = BUZZER_TIMER,
+//         .clk_cfg = LEDC_AUTO_CLK};
+//     ledc_timer_config(&buzzer_ledc_timer_cfig);
 
-    ledc_channel_config_t buzzer_ledc_channel_cfig = {
-        .channel = BUZZER_CHANNEL,
-        .duty = 0,
-        .gpio_num = BUZZER_PIN,
-        .speed_mode = LEDC_LOW_SPEED_MODE,
-        .hpoint = 0,
-        .timer_sel = BUZZER_TIMER};
-    ledc_channel_config(&buzzer_ledc_channel_cfig);
-}
+//     ledc_channel_config_t buzzer_ledc_channel_cfig = {
+//         .channel = BUZZER_CHANNEL,
+//         .duty = 0,
+//         .gpio_num = BUZZER_PIN,
+//         .speed_mode = LEDC_LOW_SPEED_MODE,
+//         .hpoint = 0,
+//         .timer_sel = BUZZER_TIMER};
+//     ledc_channel_config(&buzzer_ledc_channel_cfig);
+// }
 
 void app_main(void)
 {
     // setupButtons();
-    setupBuzzer();
+    // setupBuzzer();
 
     xTaskCreate(button_task, "button_task", 4096, NULL, 5, NULL);
-    xTaskCreate(melody_task, "melody_task", 2048, NULL, 5, NULL);
+    xTaskCreate(melody_task, "melody_task", 4096, NULL, 5, NULL);
 }
