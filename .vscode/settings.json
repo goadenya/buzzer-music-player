@@ -13,6 +13,9 @@
   },
   "idf.flashType": "UART",
   "files.associations": {
-    "cstdlib": "c"
+    "cstdlib": "c",
+    "bitset": "cpp",
+    "string_view": "cpp",
+    "regex": "cpp"
   }
 }
