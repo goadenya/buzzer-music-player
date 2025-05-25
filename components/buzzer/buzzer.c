@@ -27,7 +27,7 @@ void buzzer_init(buzzer_t *buzzer, ledc_timer_t buzzer_timer, ledc_channel_t buz
 void play_note(buzzer_t *buzzer, int note)
 {
     ledc_set_freq(LEDC_LOW_SPEED_MODE, buzzer->buzzer_timer, note);
-    ledc_set_duty(LEDC_LOW_SPEED_MODE, buzzer->buzzer_channel, 512);
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, buzzer->buzzer_channel, 768);
     ledc_update_duty(LEDC_LOW_SPEED_MODE, buzzer->buzzer_channel);
 }
 
